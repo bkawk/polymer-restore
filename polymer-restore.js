@@ -15,18 +15,79 @@ class PolymerRestore extends PolymerElement {
         :host {
           display: block;
         }
+        label.myLabel input[type="file"] {
+          position:absolute;
+          top: -1000px;
+        }
+        .myLabel {
+          border: 2px solid #AAA;
+          border-radius: 4px;
+          padding: 2px 5px;
+          margin: 2px;
+          background: #DDD;
+          display: inline-block;
+        }
+        .myLabel:hover {
+            background: #CCC;
+        }
+        .myLabel:active {
+            background: #CCF;
+        }
+        .myLabel :invalid + span {
+            color: #A44;
+        }
+        .myLabel :valid + span {
+            color: #4A4;
+        }
       </style>
-      <h2>Hello [[prop1]]!</h2>
+      <label class="myLabel">
+        <input on-change="_restore" id="file" type="file" class="none" accept="[[accept]]" required/>
+        <span>Restore Account</span>
+      </label>
+      <template is="dom-if" if="{{debug}}">
+        <small>[[restoreData]]</small>
+      </template>
     `;
   }
   static get properties() {
     return {
-      prop1: {
+      accept: {
         type: String,
-        value: 'polymer-restore',
+        value: '.keychain',
+      },
+      debug: {
+        type: Boolean,
+        value: false,
+      },
+      restoreData: {
+        type: String,
+        reflectToAttribute: true,
+        notify: true,
+      },
+      error: {
+        type: String,
+        reflectToAttribute: true,
+        notify: true,
       },
     };
   }
-}
 
-window.customElements.define('polymer-restore', PolymerRestore);
+  _restore(event) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.filename = event.target.files[0].name;
+    this.fileExtension = '.'+this.filename.split(".").slice(-1)[0] 
+    if(this.fileExtension != this.accept) {
+      return false
+    }
+    const file = event.target.files[0];
+    let reader = new FileReader();
+    reader.readAsText(file);
+    reader.onload = () => {
+        this.restoreData = reader.result;
+    };
+    reader.onerror = (error) => {
+        this.error = error;
+    };
+}
+} window.customElements.define('polymer-restore', PolymerRestore);
